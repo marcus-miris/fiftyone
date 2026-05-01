@@ -1,4 +1,5 @@
 import * as fos from "@fiftyone/state";
+import { useActivePlugins, PluginComponentType } from "@fiftyone/plugins";
 import {
   AdaptiveDpr,
   AdaptiveEvents,
@@ -164,6 +165,12 @@ export const Fo3dSceneContent = ({
       )}
 
       {mode === "annotate" && <AnnotationControls />}
+
+      {useActivePlugins(PluginComponentType.Scene3d, {}).map(
+        ({ name, component: P }) => (
+          <P key={name} />
+        )
+      )}
     </>
   );
 };

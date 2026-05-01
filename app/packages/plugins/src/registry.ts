@@ -146,6 +146,7 @@ export enum PluginComponentType {
   Panel = 2,
   Component = 3,
   SampleRenderer = 4,
+  Scene3d = 5,
 
   /**
    * DO NOT CHANGE THE VALUES OF THESE ENUMS for backward compatibility.
@@ -303,11 +304,21 @@ type BaseSampleRendererRegistration<TSample = unknown> =
 export type SampleRendererRegistration<TSample = unknown> =
   BaseSampleRendererRegistration<TSample>;
 
+export type Scene3dRegistration<T extends {} = {}> =
+  BasePluginComponentRegistration<
+    PluginComponentType.Scene3d,
+    PluginComponentProps<T>
+  > & {
+    panelOptions?: never;
+    sampleRendererOptions?: never;
+  };
+
 export interface PluginComponentRegistrationByType {
   [PluginComponentType.Plot]: PlotRegistration;
   [PluginComponentType.Panel]: PanelRegistration;
   [PluginComponentType.Component]: ComponentRegistration;
   [PluginComponentType.SampleRenderer]: SampleRendererRegistration;
+  [PluginComponentType.Scene3d]: Scene3dRegistration;
 }
 
 export type PluginComponentRegistration =
@@ -417,13 +428,17 @@ export class PluginComponentRegistry {
 
     // Sample renderers provide their own grid/modal-specific fallbacks and
     // should not inherit the generic plugin boundary, which clears the modal
-    // on error before local recovery can run.
+    // on error before local recovery can run. Scene3d components mount inside
+    // the R3F reconciler, where the boundary's HTML fallback is invalid and
+    // crashes WebGL.
+    const skipBoundary =
+      registration.type === PluginComponentType.SampleRenderer ||
+      registration.type === PluginComponentType.Scene3d;
     const wrappedRegistration: PluginComponentRegistration = {
       ...registration,
-      component:
-        registration.type === PluginComponentType.SampleRenderer
-          ? registration.component
-          : wrapCustomComponent(registration.component),
+      component: skipBoundary
+        ? registration.component
+        : wrapCustomComponent(registration.component),
     };
 
     this.data.set(name, wrappedRegistration);

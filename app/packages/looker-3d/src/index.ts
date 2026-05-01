@@ -1,3 +1,4 @@
+export { useFrame, useThree } from "@react-three/fiber";
 export * from "./annotation/store";
 export type {
   ReconciledDetection3D,
